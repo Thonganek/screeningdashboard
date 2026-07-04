@@ -1130,7 +1130,7 @@ function closeLogin(){ $('#login').classList.remove('on'); $('#loginErr').textCo
 async function doLogin(){
   const u=$('#inUser').value.trim(), p=$('#inPass').value;
   if(u===AUTH.user && p===AUTH.pass){
-    S.authed=true; try{localStorage.setItem('ppdash_auth','1');}catch(e){}
+    S.authed=true;
     closeLogin();
     updateLoginBtn();
     await loadFromGAS();          // ดึงข้อมูลใหม่พร้อมรายชื่อ
@@ -1139,7 +1139,7 @@ async function doLogin(){
     $('#loginErr').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
   }
 }
-function logout(){ S.authed=false; try{localStorage.removeItem('ppdash_auth');}catch(e){} updateLoginBtn(); closeDrill(); loadFromGAS(); }
+function logout(){ S.authed=false; updateLoginBtn(); closeDrill(); loadFromGAS(); }
 function updateLoginBtn(){
   const t=S.authed?'🔓 ออกจากระบบ':'🔒 เข้าสู่ระบบ';
   $('#btn-login').textContent=t;
@@ -1199,15 +1199,16 @@ function init(){
   $('#inPass').addEventListener('keydown',e=>{ if(e.key==='Enter')doLogin(); });
   $('#btn-refresh').onclick=()=>loadFromGAS();
 
-  $('#btn-import').onclick=()=>$('#fileImport').click();
+  $('#btn-import').onclick=()=>requireAuth(()=>$('#fileImport').click());
   $('#fileImport').onchange=e=>{ if(e.target.files[0])importXlsx(e.target.files[0]); e.target.value=''; };
 
-  S.authed=true;                 // เห็นรายชื่อได้เลย ไม่ต้องล็อกอิน
-  $('#btn-login').classList.add('hide');
-  $('#btn-login2').classList.add('hide');
+  S.authed=false;                // ผู้ใช้ทั่วไปเห็นเฉพาะ Dashboard; รายชื่อต้องล็อกอินก่อน
+  try{localStorage.removeItem('ppdash_auth');}catch(e){} // ล้างสถานะเก่าที่เคยข้ามการล็อกอิน
+  $('#btn-login').classList.remove('hide');
+  $('#btn-login2').classList.remove('hide');
   updateLoginBtn();
   syncNav();
-  loadFromGAS();                 // เปิดมาโหลด Dashboard พร้อมรายชื่อทันที
+  loadFromGAS();                 // เปิดมาโหลดเฉพาะข้อมูลสรุป โดยไม่ส่งชื่อผู้ใช้/รหัสผ่าน
 }
 document.addEventListener('DOMContentLoaded',init);
 </script>
