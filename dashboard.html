@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0b2638" />
+<title>Dashboard คัดกรองกลุ่มวัย/กลุ่มโรค — ตำบลพรหมพิราม</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --ink:#0f172a; --muted:#64748b;
+    --line:#e2e8f0; --brand:#0ea5e9; --brand2:#0369a1;
+    --pass:#16a34a; --warn:#d97706; --fail:#dc2626; --pending:#94a3b8;
+    --passbg:#dcfce7; --warnbg:#fef3c7; --failbg:#fee2e2; --pendingbg:#f1f5f9;
+    --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Sarabun","Noto Sans Thai",-apple-system,"Segoe UI",Tahoma,sans-serif;
+    background:#f1f5f9;color:var(--ink);font-size:14px;line-height:1.5;
+  }
+  a{color:var(--brand2)}
+  /* ---------- Layout ---------- */
+  .app{display:flex;min-height:100vh}
+  .side{
+    width:250px;flex-shrink:0;background:#0b1220;color:#cbd5e1;
+    position:sticky;top:0;height:100vh;overflow-y:auto;padding:14px 10px;
+  }
+  .side h1{font-size:15px;color:#fff;margin:6px 8px 2px;line-height:1.3}
+  .side .sub{font-size:11px;color:#7c8ba1;margin:0 8px 14px}
+  .navgrp{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5b6b82;margin:16px 10px 6px}
+  .navbtn{
+    display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;
+    background:transparent;color:#cbd5e1;padding:8px 10px;border-radius:8px;
+    cursor:pointer;font-size:13.5px;font-family:inherit;
+  }
+  .navbtn:hover{background:#172033;color:#fff}
+  .navbtn.active{background:var(--brand2);color:#fff;font-weight:600}
+  .navbtn .ico{font-size:16px;width:20px;text-align:center}
+  .navbtn .cnt{margin-left:auto;font-size:11px;background:#1e293b;color:#94a3b8;padding:1px 7px;border-radius:99px}
+  .navbtn.active .cnt{background:#075985;color:#e0f2fe}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:var(--shadow)
+  }
+  .topbar .grow{flex:1}
+  .content{padding:20px;max-width:1400px;width:100%;margin:0 auto}
+
+  /* ---------- Controls ---------- */
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+  .seg button{border:0;background:#fff;padding:7px 12px;cursor:pointer;font-family:inherit;font-size:12.5px;color:var(--muted)}
+  .seg button.on{background:var(--brand2);color:#fff;font-weight:600}
+  select,input,button{font-family:inherit}
+  .field{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+  select,.ipt{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px;background:#fff;color:var(--ink)}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12.5px;color:var(--ink)}
+  .btn:hover{background:#f8fafc}
+  .btn.primary{background:var(--brand2);border-color:var(--brand2);color:#fff}
+  .btn.primary:hover{background:#025b8f}
+  .pill{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+
+  /* ---------- Cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .card .lab{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .card .val{font-size:26px;font-weight:700;line-height:1.1}
+  .card .val small{font-size:13px;color:var(--muted);font-weight:400}
+  .card .foot{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+  .sec-title{font-size:19px;font-weight:700;margin:6px 0 2px;display:flex;align-items:center;gap:10px}
+  .sec-desc{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .sec-title .ico{font-size:24px}
+
+  /* ---------- Table ---------- */
+  .tblwrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:22px}
+  .tblwrap .cap{padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;background:#f8fafc}
+  .tblscroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:920px}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{background:#f8fafc;color:#475569;font-weight:600;font-size:12px;white-space:nowrap;position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.clickable{cursor:pointer}
+  tr.clickable:hover td{background:#f0f9ff}
+  .name-cell{font-weight:600}
+  .tgt-cell{color:var(--muted);font-size:12px}
+
+  .bar{height:7px;background:#eef2f7;border-radius:99px;overflow:hidden;min-width:90px;margin-top:4px}
+  .bar>span{display:block;height:100%;border-radius:99px}
+  .pct{font-weight:700;font-variant-numeric:tabular-nums}
+
+  .st-pass{color:var(--pass)} .st-warn{color:var(--warn)} .st-fail{color:var(--fail)} .st-pending{color:var(--pending)}
+  .badge-pass{background:var(--passbg);color:#166534}
+  .badge-warn{background:var(--warnbg);color:#92400e}
+  .badge-fail{background:var(--failbg);color:#991b1b}
+  .badge-pending{background:var(--pendingbg);color:#475569}
+
+  .note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+  .info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.on{display:flex}
+  .modal{background:#fff;border-radius:14px;max-width:940px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal .mh{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .modal .mh .x{margin-left:auto;border:0;background:#f1f5f9;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px}
+  .modal .mbody{overflow:auto;padding:0}
+  .tabs{display:flex;gap:4px;padding:10px 18px 0}
+  .tabs button{border:0;background:#f1f5f9;padding:7px 13px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12.5px;font-family:inherit}
+  .tabs button.on{background:var(--brand2);color:#fff;font-weight:600}
+  .setup-body{padding:18px;font-size:13.5px;line-height:1.7}
+  .setup-body ol{padding-left:20px} .setup-body li{margin-bottom:8px}
+  .setup-body code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
+  .setup-body pre{background:#0b1220;color:#e2e8f0;padding:12px;border-radius:10px;overflow:auto;font-size:12px}
+
+  .empty{padding:50px 20px;text-align:center;color:var(--muted)}
+  .empty .big{font-size:44px;margin-bottom:10px}
+  .spin{width:30px;height:30px;border:3px solid #e2e8f0;border-top-color:var(--brand2);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .hide{display:none!important}
+  .muted{color:var(--muted)}
+  .right{margin-left:auto}
+  .flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  /* ---------- Print ---------- */
+  @media print{
+    .side,.topbar .no-print,.no-print{display:none!important}
+    .app{display:block} .content{padding:0;max-width:none}
+    .tblwrap,.card{box-shadow:none;break-inside:avoid}
+    table{min-width:0;font-size:11px}
+    body{background:#fff}
+  }
+  @media(max-width:820px){
+    .side{position:fixed;left:-260px;transition:.2s;z-index:40}
+    .side.open{left:0}
+    table{min-width:760px}
+  }
+
+  /* ================================================================
+     Professional healthcare visual system
+     ================================================================ */
+  :root{
+    --bg:#eef4f6;
+    --panel:#ffffff;
+    --ink:#142b3a;
+    --muted:#647985;
+    --line:#dce7eb;
+    --brand:#0d9488;
+    --brand2:#08766f;
+    --navy:#0b2638;
+    --navy2:#123b4f;
+    --pass:#16845b;
+    --warn:#c97816;
+    --fail:#ce4545;
+    --pending:#82939d;
+    --passbg:#e2f5ec;
+    --warnbg:#fff3da;
+    --failbg:#fde9e9;
+    --pendingbg:#edf2f4;
+    --shadow:0 1px 2px rgba(14,42,57,.04),0 8px 24px rgba(14,42,57,.06);
+    --shadow-lg:0 24px 70px rgba(5,30,43,.20);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(circle at 84% 0,rgba(13,148,136,.08),transparent 27rem),
+      linear-gradient(180deg,#f5f9fa 0,#edf3f5 100%);
+    color:var(--ink);font-size:14px;line-height:1.6;letter-spacing:.005em;
+    -webkit-font-smoothing:antialiased;
+  }
+  button,select,input{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,transform .18s ease}
+  button:focus-visible,select:focus-visible,input:focus-visible{
+    outline:3px solid rgba(13,148,136,.18);outline-offset:2px;
+  }
+  ::selection{background:rgba(13,148,136,.20)}
+  *{scrollbar-width:thin;scrollbar-color:#b6c8cf transparent}
+  *::-webkit-scrollbar{width:9px;height:9px}
+  *::-webkit-scrollbar-thumb{background:#b6c8cf;border:2px solid transparent;border-radius:99px;background-clip:padding-box}
+
+  .app{min-height:100dvh}
+  .side{
+    width:282px;padding:14px 14px 12px;overflow-y:hidden;
+    background:
+      radial-gradient(circle at 15% 0,rgba(40,196,181,.17),transparent 19rem),
+      linear-gradient(175deg,var(--navy) 0,#081e2c 100%);
+    color:#bdd0d8;border-right:1px solid rgba(255,255,255,.07);
+    box-shadow:12px 0 36px rgba(11,38,56,.08);z-index:30;
+  }
+  .brand{display:flex;align-items:center;gap:12px;padding:2px 7px 13px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.09)}
+  .brand-mark{
+    width:45px;height:45px;flex:0 0 45px;display:grid;place-items:center;
+    border-radius:14px;color:#dffffb;background:linear-gradient(145deg,#12a89a,#08756f);
+    box-shadow:0 8px 20px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.20);
+  }
+  .brand-mark svg{width:26px;height:26px}
+  .brand-copy{min-width:0}
+  .brand-kicker{font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#6faaa9;margin-bottom:1px}
+  .side .brand h1{font-size:15.5px;color:#fff;margin:0;line-height:1.35;font-weight:700}
+  .side .brand .sub{font-size:11.5px;color:#8eacb8;margin:1px 0 0;line-height:1.4}
+  .navgrp{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;
+    color:#6f909e;margin:12px 11px 4px;
+  }
+  .navbtn{
+    min-height:37px;gap:9px;padding:5px 10px;margin:1px 0;border-radius:10px;
+    color:#c3d2d8;font-size:13.5px;border:1px solid transparent;
+  }
+  .navbtn .ico{
+    width:25px;height:25px;flex:0 0 25px;display:grid;place-items:center;
+    font-size:13px;border-radius:7px;background:rgba(255,255,255,.055);
+  }
+  .navbtn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.07);color:#fff;transform:translateX(2px)}
+  .navbtn.active{
+    background:linear-gradient(135deg,rgba(15,157,146,.96),rgba(8,118,111,.98));
+    border-color:rgba(133,255,240,.12);color:#fff;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+  }
+  .navbtn.active .ico{background:rgba(255,255,255,.13)}
+  .navbtn .cnt{background:rgba(0,0,0,.18);color:#a9bdc5;padding:2px 7px;line-height:1.35}
+  .navbtn.active .cnt{background:rgba(0,0,0,.18);color:#fff}
+
+  .topbar{
+    min-height:68px;padding:11px clamp(16px,2vw,30px);gap:10px;
+    background:rgba(255,255,255,.91);border-bottom-color:rgba(188,207,214,.72);
+    box-shadow:0 5px 22px rgba(14,42,57,.045);backdrop-filter:blur(16px);
+  }
+  .menu-toggle{display:none}
+  .content{padding:clamp(22px,3vw,38px);max-width:1500px}
+  .field{gap:8px;color:#617680;font-size:12px;font-weight:600;white-space:nowrap}
+  select,.ipt{
+    min-height:37px;border-color:#d3e0e4;border-radius:10px;padding:7px 32px 7px 11px;
+    background-color:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,42,57,.025);
+  }
+  select:hover,.ipt:hover{border-color:#abc5ca}
+  select:focus,.ipt:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(13,148,136,.11)}
+  .seg{padding:3px;border-color:#d7e3e7;border-radius:11px;background:#f1f6f7;box-shadow:inset 0 1px 2px rgba(14,42,57,.025)}
+  .seg button{padding:7px 12px;border-radius:8px;background:transparent;color:#647985}
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{background:#fff;color:var(--brand2);box-shadow:0 2px 8px rgba(14,42,57,.09);font-weight:700}
+  .btn{
+    min-height:37px;border-color:#d3e0e4;border-radius:10px;padding:7px 12px;
+    background:#fff;color:#304a58;font-weight:600;box-shadow:0 1px 2px rgba(14,42,57,.03);
+  }
+  .btn:hover{background:#f6fafb;border-color:#acc7cc;color:#123746;transform:translateY(-1px);box-shadow:0 5px 12px rgba(14,42,57,.07)}
+  .btn:active{transform:translateY(0)}
+  .btn.primary{background:linear-gradient(135deg,#0e968b,#08766f);border-color:#08766f;color:#fff;box-shadow:0 5px 14px rgba(8,118,111,.19)}
+  .btn.primary:hover{background:linear-gradient(135deg,#0b887f,#066861);border-color:#066861;color:#fff}
+  .pill{padding:4px 10px;border-radius:99px;font-size:11px;line-height:1.5;border:1px solid transparent}
+  .badge-pass{border-color:#bde6d1}.badge-warn{border-color:#f4d99f}.badge-fail{border-color:#f3caca}.badge-pending{border-color:#dce4e7}
+  #status{white-space:nowrap}
+
+  .sec-title{
+    position:relative;font-size:clamp(21px,2vw,26px);font-weight:750;letter-spacing:-.02em;
+    margin:0 0 4px;line-height:1.35;color:#102f40;
+  }
+  .sec-title .ico{
+    width:42px;height:42px;display:grid;place-items:center;font-size:21px;border-radius:13px;
+    background:linear-gradient(145deg,#e0f5f2,#f0faf9);border:1px solid #c9e9e5;
+    box-shadow:0 4px 12px rgba(13,148,136,.08);
+  }
+  .sec-desc{color:#69808b;font-size:13px;margin:0 0 24px;padding-left:54px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:15px;margin-bottom:24px}
+  .card{
+    position:relative;overflow:hidden;min-height:126px;padding:18px 19px 16px;
+    border-color:#dce7eb;border-radius:15px;background:linear-gradient(155deg,#fff 55%,#f8fbfc 100%);
+    box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+  }
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#14a99d,#08766f)}
+  .card::after{content:"";position:absolute;width:85px;height:85px;border-radius:50%;right:-35px;top:-40px;background:rgba(13,148,136,.055)}
+  .card:nth-child(2)::before{background:linear-gradient(180deg,#2b84bd,#175f91)}
+  .card:nth-child(2)::after{background:rgba(43,132,189,.055)}
+  .card:nth-child(3)::before{background:linear-gradient(180deg,#e3a128,#bd7110)}
+  .card:nth-child(3)::after{background:rgba(227,161,40,.06)}
+  .card:nth-child(4)::before{background:linear-gradient(180deg,#8a72c2,#684ea4)}
+  .card:nth-child(4)::after{background:rgba(138,114,194,.055)}
+  .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,42,57,.09);border-color:#c9dade}
+  .card .lab{position:relative;font-size:12px;font-weight:600;color:#6c818b;margin-bottom:7px}
+  .card .val{position:relative;font-size:30px;font-weight:750;letter-spacing:-.03em;color:#143849}
+  .card .val small{font-size:13px;color:#718690}
+  .card .foot{position:relative;font-size:11.5px;color:#81939c;margin-top:7px}
+
+  .tblwrap{
+    border-color:#dbe6ea;border-radius:15px;box-shadow:var(--shadow);margin-bottom:25px;
+    background:rgba(255,255,255,.97);
+  }
+  .tblwrap .cap{
+    min-height:51px;padding:13px 18px;border-bottom-color:#e0e9ec;
+    background:linear-gradient(180deg,#fbfdfd,#f5f9fa);color:#244655;font-size:14px;font-weight:700;
+  }
+  .tblscroll{scrollbar-color:#c0cfd5 #f4f8f9}
+  table{font-size:13px}
+  th,td{padding:11px 14px;border-bottom-color:#e7eef0}
+  th{
+    background:#f5f9fa;color:#5d747f;font-weight:700;font-size:11.5px;
+    letter-spacing:.015em;text-transform:none;z-index:1;
+  }
+  tbody tr{transition:background .15s ease}
+  tbody tr:nth-child(even) td{background:rgba(246,250,251,.55)}
+  tr.clickable:hover td{background:#eaf7f6;color:#143849}
+  .name-cell{color:#244655;font-weight:700}
+  .tgt-cell{color:#718690}
+  .bar{height:8px;background:#e8eff1;box-shadow:inset 0 1px 2px rgba(14,42,57,.06)}
+  .bar>span{box-shadow:inset 0 -1px rgba(0,0,0,.08)}
+  .pct{letter-spacing:-.01em}
+  .note,.info{border-radius:12px;padding:12px 15px;line-height:1.65;box-shadow:0 2px 8px rgba(14,42,57,.025)}
+  .note{background:#fff8e8;border-color:#f2dda9;color:#8d5a18}
+  .info{background:#edf8f8;border-color:#c7e7e4;color:#24635f}
+
+  .overlay{background:rgba(4,25,37,.62);backdrop-filter:blur(5px);animation:fadeIn .16s ease}
+  .modal{border:1px solid rgba(255,255,255,.65);border-radius:18px;box-shadow:var(--shadow-lg)}
+  .modal .mh{min-height:59px;padding:14px 19px;border-bottom-color:#e1eaed;background:#fbfdfd;color:#173b4b}
+  .modal .mh .x{width:34px;height:34px;border-radius:10px;background:#edf3f5;color:#526b76}
+  .modal .mh .x:hover{background:#e3ecef;color:#173b4b;transform:rotate(4deg)}
+  .tabs{gap:6px;padding:12px 18px 0;border-bottom:1px solid #e3ebee;background:#fafcfc}
+  .tabs button{padding:9px 14px;border-radius:9px 9px 0 0;background:#edf3f5;color:#607681}
+  .tabs button.on{background:var(--brand2);color:#fff}
+  .setup-body{padding:21px}
+  .empty{padding:58px 20px}
+  .empty .big{filter:drop-shadow(0 5px 9px rgba(14,42,57,.10))}
+  .spin{width:34px;height:34px;border-color:#dce8eb;border-top-color:var(--brand);animation-duration:.8s}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  @media(max-width:1180px){
+    .topbar{align-items:flex-end}
+    .topbar .grow{display:none}
+    #status{margin-left:auto}
+  }
+  @media(max-height:680px){
+    .side{padding-top:9px;padding-bottom:8px}
+    .brand{padding-bottom:9px}
+    .brand-mark{width:39px;height:39px;flex-basis:39px;border-radius:11px}
+    .brand-mark svg{width:23px;height:23px}
+    .side .brand h1{font-size:14px}
+    .side .brand .sub{font-size:10.5px}
+    .navgrp{margin-top:7px;margin-bottom:2px;font-size:9.5px}
+    .navbtn{min-height:32px;padding-top:3px;padding-bottom:3px;font-size:12.5px}
+    .navbtn .ico{width:22px;height:22px;flex-basis:22px;font-size:12px}
+  }
+  @media(max-width:820px){
+    .side{width:282px;left:-292px;transition:left .24s ease;box-shadow:20px 0 60px rgba(4,25,37,.30)}
+    .side.open{left:0}
+    .menu-toggle{display:inline-grid;place-items:center;flex:0 0 39px;padding:0;font-size:18px}
+    .topbar{padding:10px 14px;gap:8px;position:sticky}
+    .topbar .field{flex:1 1 110px}
+    .topbar .field select{width:100%}
+    .topbar .seg{order:8;flex:1 0 100%}
+    .topbar .seg button{flex:1}
+    #status{margin-left:0}
+    #btn-import,#btn-login,#btn-refresh{font-size:0;padding:7px 10px;min-width:39px}
+    #btn-import::first-letter,#btn-login::first-letter,#btn-refresh::first-letter{font-size:15px}
+    .content{padding:22px 15px 32px}
+    .sec-desc{padding-left:0;margin-top:8px}
+    .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .card{min-height:116px;padding:16px 15px 14px}
+    .card .val{font-size:26px}
+    table{min-width:760px}
+  }
+  @media(max-width:520px){
+    .topbar .field span{display:none}
+    .topbar .field{flex-basis:92px}
+    #status{order:7;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .sec-title{font-size:20px;align-items:flex-start}
+    .sec-title .ico{width:38px;height:38px;flex:0 0 38px;font-size:19px}
+    .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .card{min-height:108px;padding:14px 13px 12px}
+    .card .lab{font-size:11px}
+    .card .val{font-size:23px}
+    .card .foot{font-size:10.5px}
+    .modal{max-height:94vh;border-radius:15px}
+    .overlay{padding:10px}
+  }
+  @media print{
+    :root{--line:#d8e0e3}
+    body{background:#fff;font-size:11px}
+    .main{display:block}
+    .content{padding:0;max-width:none}
+    .sec-title{font-size:20px}.sec-desc{padding-left:0;margin-bottom:14px}
+    .cards{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+    .card{min-height:0;padding:10px 12px;border-radius:8px}
+    .card:hover{transform:none}.card .val{font-size:21px}
+    .tblwrap{border-radius:8px;margin-bottom:14px}
+    th,td{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 5.5v21M5.5 16h21" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/>
+          <path d="M6.5 22h4l2.3-4.2 3.2 7.1 3.2-12 2.2 9.1h4.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <div class="brand-kicker">PUBLIC HEALTH</div>
+        <h1>ระบบติดตามการคัดกรอง</h1>
+        <div class="sub">รพ.พรหมพิราม · PP Schedule</div>
+      </div>
+    </div>
+    <div class="navgrp">ภาพรวม</div>
+    <button class="navbtn" data-view="overview"><span class="ico">📊</span> สรุปภาพรวมทั้งหมด</button>
+    <div class="navgrp">คัดกรองตามกลุ่มวัย</div>
+    <div id="nav-age"></div>
+    <div class="navgrp">กลุ่มโรคเรื้อรัง (NCD)</div>
+    <div id="nav-dz"></div>
+    <div class="navgrp">ระบบ</div>
+    <button class="navbtn" id="btn-login2"><span class="ico">🔑</span> เข้าสู่ระบบ (ดูรายชื่อ)</button>
+    <button class="navbtn" onclick="window.print()"><span class="ico">🖨️</span> พิมพ์ / บันทึก PDF</button>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="topbar">
+      <button class="btn no-print menu-toggle" onclick="document.getElementById('side').classList.toggle('open')" title="เปิดเมนู" aria-label="เปิดเมนู">☰</button>
+      <div class="field no-print">
+        <span>ปีงบประมาณ</span>
+        <select id="fySel"></select>
+      </div>
+      <div class="seg no-print" id="modeSeg">
+        <button data-mode="fy" class="on">ตามปีงบประมาณ</button>
+        <button data-mode="all">สะสมทั้งหมด</button>
+      </div>
+      <div class="field no-print">
+        <span>หมู่</span>
+        <select id="mooSel"><option value="">ทุกหมู่</option></select>
+      </div>
+      <div class="grow"></div>
+      <span id="status" class="pill badge-pending no-print">● กำลังเริ่ม...</span>
+      <button class="btn no-print" id="btn-import">📥 อัปเดตข้อมูล (นำเข้า Excel)</button>
+      <button class="btn no-print" id="btn-login">🔒 เข้าสู่ระบบ</button>
+      <button class="btn no-print" id="btn-refresh">↻ โหลดข้อมูล</button>
+      <input type="file" id="fileImport" accept=".xlsx,.xls" class="hide" />
+    </div>
+
+    <div class="content" id="content">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ============ Drill-down Modal ============ -->
+<div class="overlay" id="drill">
+  <div class="modal">
+    <div class="mh">
+      <span class="ico">📋</span>
+      <b id="drillTitle">รายชื่อ</b>
+      <button class="btn no-print" id="drillCsv" style="margin-left:auto">⬇ Export CSV</button>
+      <button class="x" onclick="closeDrill()">✕</button>
+    </div>
+    <div class="tabs" id="drillTabs"></div>
+    <div class="mbody" id="drillBody"></div>
+  </div>
+</div>
+
+<!-- ============ Login Modal ============ -->
+<div class="overlay" id="login">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><span class="ico">🔑</span><b>เข้าสู่ระบบเพื่อดูรายชื่อ</b><button class="x" onclick="closeLogin()">✕</button></div>
+    <div class="mbody setup-body">
+      <div class="info" style="margin-top:0">Dashboard และตัวเลขสถิติดูได้โดยไม่ต้องล็อกอิน<br>แต่การดู <b>รายชื่อบุคคล</b> (ยังไม่คัดกรอง / ผลผิดปกติ) ต้องเข้าสู่ระบบก่อน</div>
+      <label style="font-weight:600">ชื่อผู้ใช้</label>
+      <input class="ipt" id="inUser" style="width:100%;margin:6px 0 12px" autocomplete="username" placeholder="admin" />
+      <label style="font-weight:600">รหัสผ่าน</label>
+      <input class="ipt" id="inPass" type="password" style="width:100%;margin:6px 0 6px" autocomplete="current-password" placeholder="••••" />
+      <div id="loginErr" class="st-fail" style="font-size:12.5px;height:18px;margin-bottom:8px"></div>
+      <button class="btn primary" id="doLogin" style="width:100%">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- SheetJS สำหรับอ่านไฟล์ Excel ตอนนำเข้าข้อมูล -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ==================================================================
+   CONFIG — ปรับค่าตัวชี้วัด / เป้าหมายทางการได้ที่นี่
+   ================================================================== */
+
+// URL ของ Google Apps Script Web App (ฝังไว้ในโค้ด)
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGbMhGOTWy7CSsws-Gqqcdq3LX8byirYt9p9Fk3W7F0UmwG-z5bOsmXUqCyOP1k9ipog/exec';
+// บัญชีสำหรับดู "รายชื่อบุคคล" (ต้องตรงกับ Code.gs)
+const AUTH = { user:'admin', pass:'1234' };
+
+// ปุ่มสลับ "จำนวนเป้าหมาย" : คำนวณจากประชากรในไฟล์ (true) เสมอ
+// ถ้ามีตัวเลขเป้าหมายทางการจาก สปสช./เขต ให้ใส่ทับใน TARGET_OVERRIDE
+// key = "<groupId>|<screeningCode>" , value = จำนวนเป้าหมาย (คน)
+const TARGET_OVERRIDE = {
+  // ตัวอย่าง: 'work|dm': 1500,  'elder|crc': 800,
+};
+
+// เกณฑ์ KPI (% ความครอบคลุมที่ถือว่า "ผ่าน") — ปรับได้ตามปีงบประมาณ
+const KPI = {
+  dm:90, ht:90, lipid:60, hbsag:60, hcv:60, crc:60, cxca:60, anemia:80, ncd_mon:90
+};
+
+// ปีงบประมาณที่เลือกได้ (พ.ศ.)
+const FY_LIST = [2569,2568,2567,2566];
+
+// เกณฑ์ค่าผลตรวจผิดปกติ
+const TH = { fbs:126, fbsPre:100, chol:200, tg:150, hctLow:33 };
+
+/* ==================================================================
+   STATE
+   ================================================================== */
+const S = { raw:[], people:[], fy:2569, mode:'fy', moo:'', view:'overview', updated:'', authed:false };
+
+/* ==================================================================
+   UTILITIES
+   ================================================================== */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Number(n||0).toLocaleString('th-TH');
+function lower(o){const r={};for(const k in o)r[String(k).trim().toLowerCase()]=o[k];return r;}
+function numOf(v){ if(v==null||v==='')return null; const m=String(v).match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):null; }
+function isPos(v){ if(v==null)return false; const s=String(v).toLowerCase(); return s.includes('positive'); }
+function isNeg(v){ if(v==null)return false; return String(v).toLowerCase().includes('negative'); }
+function sexOf(name){ const n=String(name||''); if(/^(นาย|ด\.ช\.|เด็กชาย|พระ|สามเณร|ส\.ณ\.)/.test(n))return 'M'; if(/^(นาง|น\.ส\.|นางสาว|ด\.ญ\.|เด็กหญิง)/.test(n))return 'F'; return '?'; }
+function parseDate(v){
+  if(v==null||v==='')return null;
+  if(v instanceof Date)return isNaN(v)?null:v;
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function ageFrom(row){
+  const a=numOf(row.age); if(a!=null && a>=0 && a<130)return Math.floor(a);
+  const b=parseDate(row.birthday); if(b){ const now=new Date(); let y=now.getFullYear()-b.getFullYear(); if(now.getMonth()<b.getMonth()||(now.getMonth()===b.getMonth()&&now.getDate()<b.getDate()))y--; return y; }
+  return null;
+}
+const yes=v=>String(v||'').trim()==='เป็น';
+
+// fiscal-year window (พ.ศ. -> ค.ศ.), FYxxxx = 1 ต.ค.(ปีก่อน) ถึง 30 ก.ย.
+function fyRange(be){ const endY=be-543; return { start:new Date(endY-1,9,1), end:new Date(endY,8,30,23,59,59) }; }
+
+/* ==================================================================
+   NORMALIZE ROW -> PERSON
+   ================================================================== */
+function normalize(rows){
+  return rows.map(r0=>{
+    const r=lower(r0);
+    const test=(dCol,vCol)=>({date:parseDate(r[dCol]), raw:r[vCol]!=null?String(r[vCol]):null});
+    return {
+      _rid:r._rid, hn:r.hn||'', cid:r.cid||'', name:r.ptname||'', pttype:r.pttype||'',
+      age:ageFrom(r), sex:sexOf(r.ptname),
+      moo:(r.moo==null?'':String(r.moo).trim()),
+      house:r.house_no||'', tambol:r.tambol||'',
+      dm:yes(r.dm), ht:yes(r.ht), dlp:yes(r.dlp),
+      hct:test('hct_date','hct'),
+      chol:test('choles_date','choles'),
+      tg:test('tg_date','tg'),
+      fbs:test('fbs_date','fbs'),
+      hbsag:test('hbsag_date','hbsag'),
+      hcv:test('hcv_date','hcv'),
+      hpv:test('hpv_date','hpv'),
+      fit:test('fit_date','fit'),
+    };
+  }).filter(p=>p.hn||p.cid||p._rid);
+}
+
+// "ได้รับการคัดกรอง" ตามโหมด/หน้าต่างเวลา
+function screened(test, windowYears){
+  if(!test||!test.date)return false;
+  if(S.mode==='all')return true;                 // สะสมทั้งหมด
+  const {start,end}=fyRange(S.fy);
+  if(windowYears && windowYears>1){              // นับย้อนหลัง N ปี (เช่น HPV 5 ปี)
+    const ws=new Date(end); ws.setFullYear(ws.getFullYear()-windowYears);
+    return test.date>=ws && test.date<=end;
+  }
+  return test.date>=start && test.date<=end;     // ภายในปีงบฯ
+}
+
+/* ==================================================================
+   DEFINITIONS — กลุ่มวัย + รายการคัดกรอง (เฉพาะรายการที่มีข้อมูลจริงในไฟล์)
+   ================================================================== */
+const inAge=(p,lo,hi)=>p.age!=null&&p.age>=lo&&p.age<=hi;
+
+const AGE_GROUPS=[
+  { id:'child', ico:'🧒', name:'เด็กปฐมวัย 0–5 ปี', desc:'คัดกรองภาวะโลหิตจางในเด็กเล็ก',
+    pop:p=>inAge(p,0,5), screenings:[
+      sAnemia('c_anemia','คัดกรองภาวะโลหิตจาง (Hct)','เด็ก 0–5 ปี',p=>inAge(p,0,5)),
+    ]},
+  { id:'school', ico:'🎒', name:'เด็กวัยเรียน 6–12 ปี', desc:'คัดกรองภาวะโลหิตจางในนักเรียน',
+    pop:p=>inAge(p,6,12), screenings:[
+      sAnemia('sc_anemia','คัดกรองภาวะโลหิตจาง (Hct)','นักเรียน 6–12 ปี',p=>inAge(p,6,12)),
+    ]},
+  { id:'teen', ico:'🧑‍🎓', name:'วัยรุ่น 13–21 ปี', desc:'คัดกรองภาวะโลหิตจางในวัยรุ่น',
+    pop:p=>inAge(p,13,21), screenings:[
+      sAnemia('tn_anemia','คัดกรองภาวะโลหิตจาง (Hct)','วัยรุ่น 13–21 ปี',p=>inAge(p,13,21)),
+    ]},
+  { id:'work', ico:'💼', name:'วัยทำงาน 22–59 ปี', desc:'คัดกรอง NCD และมะเร็งตามชุดสิทธิประโยชน์ PP',
+    pop:p=>inAge(p,22,59), screenings:[
+      sDM('w_dm', p=>inAge(p,22,59)),
+      sLipid('w_lipid', p=>inAge(p,22,59)),
+      sHBsag('w_hbsag', p=>inAge(p,22,59)),
+      sHCV('w_hcv', p=>inAge(p,22,59)),
+      sCRC('w_crc', p=>inAge(p,50,59)),
+      sCxCa('w_cxca', p=>p.sex==='F'&&inAge(p,30,59)),
+    ]},
+  { id:'elder', ico:'🧓', name:'ผู้สูงอายุ 60 ปีขึ้นไป', desc:'คัดกรอง NCD และมะเร็งในผู้สูงอายุ',
+    pop:p=>inAge(p,60,200), screenings:[
+      sDM('e_dm', p=>inAge(p,60,200)),
+      sLipid('e_lipid', p=>inAge(p,60,200)),
+      sHBsag('e_hbsag', p=>inAge(p,60,200)),
+      sHCV('e_hcv', p=>inAge(p,60,200)),
+      sCRC('e_crc', p=>inAge(p,60,70)),
+      sCxCa('e_cxca', p=>p.sex==='F'&&inAge(p,60,60)),
+    ]},
+];
+
+/* ---------- screening factory ---------- */
+function sDM(code,ageFn){ return {code,name:'คัดกรองเบาหวาน (FBS)',target:'อายุ ≥35 ปี ที่ยังไม่เป็น DM',available:true,kpi:KPI.dm,win:1,field:'fbs',
+  target_fn:p=>ageFn(p)&&p.age>=35&&!p.dm,
+  screened_fn:p=>screened(p.fbs,1),
+  abnormal_fn:p=>{const v=numOf(p.fbs.raw);return v!=null&&v>=TH.fbs;},
+  followText:'FBS ≥126 → ส่งพบแพทย์วินิจฉัย DM'};}
+
+function sLipid(code,ageFn){ return {code,name:'คัดกรองไขมันในเลือด (Chol/TG)',target:'อายุ ≥35 ปี',available:true,kpi:KPI.lipid,win:1,field:'lipid',
+  target_fn:p=>ageFn(p)&&p.age>=35,
+  screened_fn:p=>screened(p.chol,1)||screened(p.tg,1),
+  abnormal_fn:p=>{const c=numOf(p.chol.raw),t=numOf(p.tg.raw);return (c!=null&&c>=TH.chol)||(t!=null&&t>=TH.tg);},
+  followText:'Chol ≥200 หรือ TG ≥150 → ปรับพฤติกรรม/พบแพทย์'};}
+
+function sHBsag(code,ageFn){ return {code,name:'คัดกรองไวรัสตับอักเสบ บี (HBsAg)',target:'ประชากรกลุ่มเป้าหมาย (เกิดก่อน พ.ศ.2535)',available:true,kpi:KPI.hbsag,win:99,field:'hbsag',
+  target_fn:p=>ageFn(p),
+  screened_fn:p=>screened(p.hbsag,99),
+  abnormal_fn:p=>isPos(p.hbsag.raw),
+  followText:'HBsAg Positive → ส่งต่อประเมิน/รักษาตับอักเสบ บี'};}
+
+function sHCV(code,ageFn){ return {code,name:'คัดกรองไวรัสตับอักเสบ ซี (Anti-HCV)',target:'ประชากรกลุ่มเป้าหมาย',available:true,kpi:KPI.hcv,win:99,field:'hcv',
+  target_fn:p=>ageFn(p),
+  screened_fn:p=>screened(p.hcv,99),
+  abnormal_fn:p=>isPos(p.hcv.raw),
+  followText:'Anti-HCV Positive → ส่งตรวจยืนยัน/รักษา'};}
+
+function sCRC(code,ageFn){ return {code,name:'คัดกรองมะเร็งลำไส้ใหญ่ (FIT)',target:'อายุ 50–70 ปี',available:true,kpi:KPI.crc,win:2,field:'fit',
+  target_fn:p=>ageFn(p),
+  screened_fn:p=>screened(p.fit,2),
+  abnormal_fn:p=>isPos(p.fit.raw),
+  followText:'FIT Positive → ส่งส่องกล้องลำไส้ใหญ่ (Colonoscopy)'};}
+
+function sCxCa(code,tgtFn){ return {code,name:'คัดกรองมะเร็งปากมดลูก (HPV/Pap)',target:'หญิง 30–60 ปี',available:true,kpi:KPI.cxca,win:5,field:'hpv',
+  target_fn:tgtFn,
+  screened_fn:p=>screened(p.hpv,5),
+  abnormal_fn:p=>{const s=String(p.hpv.raw||'').toLowerCase(); return isPos(p.hpv.raw)||s.includes('ส่งต่อ')||s.includes('ส่ง รพ')||s.includes('positive');},
+  followText:'ผลผิดปกติ/ส่งต่อ → ส่งตรวจ Colposcopy'};}
+
+function sAnemia(code,name,target,ageFn){ return {code,name,target,available:true,kpi:KPI.anemia,win:1,field:'hct',
+  target_fn:ageFn,
+  screened_fn:p=>screened(p.hct,1),
+  abnormal_fn:p=>{const v=numOf(p.hct.raw);return v!=null&&v<TH.hctLow;},
+  followText:'Hct ต่ำ → ประเมินภาวะซีด/เสริมธาตุเหล็ก'};}
+
+/* ==================================================================
+   CHRONIC DISEASE GROUPS
+   ================================================================== */
+const DZ_GROUPS=[
+  { id:'dm', ico:'🩸', name:'เบาหวาน (DM)', desc:'การติดตามผู้ป่วยเบาหวาน (จากข้อมูลที่มีในไฟล์)',
+    base:p=>p.dm, items:[
+      dzReg('ผู้ป่วยเบาหวานในทะเบียน','ผู้ป่วย DM ทั้งหมด'),
+      dzMon('dm_fbs','ได้รับการตรวจน้ำตาล (FBS)', p=>screened(p.fbs,1), p=>{const v=numOf(p.fbs.raw);return v!=null&&v>=TH.fbs;},'FBS ≥126 (ยังคุมไม่ได้)',true,'fbs'),
+      dzMon('dm_lipid','ได้รับการตรวจไขมัน (Chol/TG)', p=>screened(p.chol,1)||screened(p.tg,1), p=>{const c=numOf(p.chol.raw);return c!=null&&c>=TH.chol;},'ไขมันสูง',true,'lipid'),
+      dzMon('dm_ht','มีความดันโลหิตสูงร่วม (HT)', p=>p.ht, p=>p.ht,'ผู้ป่วย DM+HT',false),
+    ]},
+  { id:'ht', ico:'❤️', name:'ความดันโลหิตสูง (HT)', desc:'การติดตามผู้ป่วยความดัน (จากข้อมูลที่มีในไฟล์)',
+    base:p=>p.ht, items:[
+      dzReg('ผู้ป่วยความดันในทะเบียน','ผู้ป่วย HT ทั้งหมด'),
+      dzMon('ht_lipid','ได้รับการตรวจไขมัน (Chol/TG)', p=>screened(p.chol,1)||screened(p.tg,1), p=>{const c=numOf(p.chol.raw);return c!=null&&c>=TH.chol;},'ไขมันสูง',true,'lipid'),
+      dzMon('ht_dm','มีเบาหวานร่วม (DM)', p=>p.dm, p=>p.dm,'ผู้ป่วย HT+DM',false),
+    ]},
+  { id:'dlp', ico:'🧈', name:'ไขมันในเลือดสูง (DLP)', desc:'การติดตามผู้ป่วยไขมันในเลือดสูง',
+    base:p=>p.dlp, items:[
+      dzReg('ผู้ป่วยไขมันสูงในทะเบียน','ผู้ป่วย DLP ทั้งหมด'),
+      dzMon('dlp_lab','ได้รับการตรวจไขมัน (Chol/TG)', p=>screened(p.chol,1)||screened(p.tg,1), p=>{const c=numOf(p.chol.raw);return c!=null&&c>=TH.chol;},'ไขมันยังสูง',true,'lipid'),
+    ]},
+];
+function dzReg(name,target){ return {code:'reg',name,target,type:'reg'}; }
+function dzMon(code,name,fn,abn,abnLabel,isTask,field){ return {code,name,type:'mon',fn,abn,abnLabel,kpi:KPI.ncd_mon,isTask:isTask!==false,field:field||null}; }
+
+/* ==================================================================
+   COMPUTE
+   ================================================================== */
+function activePeople(){ return S.people.filter(p=> !S.moo || p.moo===S.moo ); }
+
+function computeScreening(pop, sc){
+  if(sc.available===false){
+    return {available:false, target:0, screened:0, pct:0, gap:0, abn:0, status:'pending', notList:[], abnList:[], sc};
+  }
+  const elig=pop.filter(sc.target_fn);
+  const notList=[], abnList=[]; let screenedN=0, abn=0;
+  for(const p of elig){
+    const sd=sc.screened_fn(p);
+    if(sd){ screenedN++; if(sc.abnormal_fn(p)){abn++; abnList.push(p);} }
+    else notList.push(p);
+  }
+  const target=elig.length;
+  const ov=TARGET_OVERRIDE[pop.__gid+'|'+sc.code];
+  const tgt=ov!=null?ov:target;
+  const pct=tgt>0?(screenedN/tgt*100):0;
+  const kpi=sc.kpi||0;
+  let status='pending';
+  if(kpi>0){ status = pct>=kpi?'pass' : pct>=kpi*0.8?'warn':'fail'; }
+  else status = pct>=100?'pass':'warn';
+  return {available:true, target:tgt, eligN:target, screened:screenedN, pct, gap:Math.max(0,tgt-screenedN),
+    abn, status, notList, abnList, kpi, need:Math.max(0,Math.ceil(tgt*kpi/100)-screenedN), sc};
+}
+
+/* ==================================================================
+   RENDER helpers
+   ================================================================== */
+function statusBadge(st){
+  const map={pass:['badge-pass','✔ ผ่าน'],warn:['badge-warn','▲ ใกล้เคียง'],fail:['badge-fail','✘ ไม่ผ่าน'],pending:['badge-pending','⏳ รอข้อมูล']};
+  const [c,t]=map[st]||map.pending; return `<span class="pill ${c}">${t}</span>`;
+}
+function barColor(st){ return {pass:'var(--pass)',warn:'var(--warn)',fail:'var(--fail)',pending:'var(--pending)'}[st]; }
+function pctCell(r){
+  if(!r.available)return '<span class="muted">—</span>';
+  return `<div class="pct st-${r.status}">${r.pct.toFixed(1)}%</div>
+    <div class="bar"><span style="width:${Math.min(100,r.pct)}%;background:${barColor(r.status)}"></span></div>`;
+}
+
+/* ==================================================================
+   VIEWS
+   ================================================================== */
+function render(){
+  if(!S.people.length){ renderEmpty(); syncNav(); return; }
+  syncNav();
+  if(S.view==='overview') return renderOverview();
+  const g=AGE_GROUPS.find(x=>x.id===S.view); if(g) return renderAgeGroup(g);
+  const d=DZ_GROUPS.find(x=>x.id===S.view); if(d) return renderDisease(d);
+  renderOverview();
+}
+
+function renderEmpty(){
+  $('#content').innerHTML=`<div class="tblwrap"><div class="empty">
+    <div class="spin"></div>
+    <p class="muted">กำลังดึงข้อมูลจาก Google Sheet...</p>
+  </div></div>`;
+}
+
+function groupPop(g){ const pop=activePeople().filter(g.pop); pop.__gid=g.id; return pop; }
+
+function renderOverview(){
+  const ppl=activePeople();
+  // สรุปกลุ่มวัย
+  const ageRows=AGE_GROUPS.map(g=>{
+    const pop=groupPop(g);
+    const comp=g.screenings.filter(s=>s.available!==false);
+    const res=comp.map(sc=>computeScreening(pop,sc));
+    const pass=res.filter(r=>r.status==='pass').length;
+    const totKPI=res.filter(r=>r.kpi).length;
+    return {g,popN:pop.length,comp:comp.length,total:g.screenings.length,pass,totKPI,res};
+  });
+  const totalKPI=ageRows.reduce((a,r)=>a+r.totKPI,0);
+  const totalPass=ageRows.reduce((a,r)=>a+r.pass,0);
+  const dm=ppl.filter(p=>p.dm).length, ht=ppl.filter(p=>p.ht).length, dlp=ppl.filter(p=>p.dlp).length;
+
+  let html=`
+  <h2 class="sec-title"><span class="ico">📊</span> สรุปภาพรวมทั้งหมด</h2>
+  <p class="sec-desc">${modeLabel()} · ${S.moo?('หมู่ '+S.moo):'ทุกหมู่'} · ปรับปรุงข้อมูล ${esc(S.updated||'-')}</p>
+  <div class="cards">
+    ${card('ประชากรทั้งหมด',fmt(ppl.length),'คนในพื้นที่')}
+    ${card('ผู้ป่วยเบาหวาน (DM)',fmt(dm),pctTxt(dm,ppl.length)+' ของประชากร')}
+    ${card('ผู้ป่วยความดัน (HT)',fmt(ht),pctTxt(ht,ppl.length)+' ของประชากร')}
+    ${card('ไขมันในเลือดสูง (DLP)',fmt(dlp),pctTxt(dlp,ppl.length)+' ของประชากร')}
+    ${card('ตัวชี้วัดที่ผ่าน',totalPass+' / '+totalKPI,'รายการคัดกรองที่มีข้อมูล')}
+  </div>
+
+  <div class="tblwrap"><div class="cap">🎯 สถานะตัวชี้วัดคัดกรองรายกลุ่มวัย</div>
+  <div class="tblscroll"><table>
+    <thead><tr><th>กลุ่มวัย</th><th class="num">ประชากร</th><th>รายการคัดกรอง</th><th class="num">ผ่าน KPI</th><th style="width:200px">ความสำเร็จ</th><th></th></tr></thead>
+    <tbody>`;
+  ageRows.forEach(r=>{
+    const rate=r.totKPI?(r.pass/r.totKPI*100):0;
+    const st=r.totKPI? (rate>=100?'pass':rate>=50?'warn':'fail'):'pending';
+    html+=`<tr class="clickable" onclick="go('${r.g.id}')">
+      <td class="name-cell">${r.g.ico} ${esc(r.g.name)}</td>
+      <td class="num">${fmt(r.popN)}</td>
+      <td>${r.comp} รายการคัดกรอง</td>
+      <td class="num"><b class="st-${st}">${r.pass}/${r.totKPI||'-'}</b></td>
+      <td>${r.totKPI?`<div class="pct st-${st}">${rate.toFixed(0)}%</div><div class="bar"><span style="width:${Math.min(100,rate)}%;background:${barColor(st)}"></span></div>`:'<span class="muted">รอเชื่อมข้อมูล</span>'}</td>
+      <td>${statusBadge(st)}</td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+
+  // สรุปกลุ่มโรค
+  html+=`<div class="tblwrap"><div class="cap">🩺 สถานะกลุ่มโรคเรื้อรัง (NCD)</div>
+  <div class="tblscroll"><table>
+  <thead><tr><th>กลุ่มโรค</th><th class="num">จำนวนผู้ป่วย</th><th>ตัวชี้วัดที่ติดตามได้</th><th></th></tr></thead><tbody>`;
+  DZ_GROUPS.forEach(d=>{
+    const base=ppl.filter(d.base);
+    const mon=d.items.filter(i=>i.type==='mon').length;
+    html+=`<tr class="clickable" onclick="go('${d.id}')">
+      <td class="name-cell">${d.ico} ${esc(d.name)}</td>
+      <td class="num">${base.length?fmt(base.length):'<span class="muted">—</span>'}</td>
+      <td>${mon?mon+' รายการจากข้อมูลจริง':'<span class="muted">รอเชื่อมข้อมูล</span>'}</td>
+      <td>${base.length?statusBadge('warn'):statusBadge('pending')}</td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  $('#content').innerHTML=html;
+}
+
+function renderAgeGroup(g){
+  const pop=groupPop(g);
+  const res=g.screenings.map(sc=>computeScreening(pop,sc));
+  const withData=res.filter(r=>r.available);
+  const pass=withData.filter(r=>r.status==='pass').length;
+  const totKPI=withData.filter(r=>r.kpi).length;
+  const abnTot=withData.reduce((a,r)=>a+r.abn,0);
+  const gapTot=withData.reduce((a,r)=>a+r.gap,0);
+
+  let html=`
+  <h2 class="sec-title"><span class="ico">${g.ico}</span> ${esc(g.name)}</h2>
+  <p class="sec-desc">${esc(g.desc)} · ${modeLabel()} · ${S.moo?('หมู่ '+S.moo):'ทุกหมู่'}</p>
+  <div class="cards">
+    ${card('ประชากรกลุ่มนี้',fmt(pop.length),'คน')}
+    ${card('ตัวชี้วัดผ่าน KPI',pass+' / '+(totKPI||'-'),'รายการที่มีข้อมูล')}
+    ${card('ยังไม่ได้คัดกรอง (รวม)',fmt(gapTot),'ครั้ง/ราย ที่ต้องตามเก็บ')}
+    ${card('พบผลผิดปกติ (รวม)',fmt(abnTot),'ราย ต้องติดตาม',abnTot?'st-fail':'')}
+  </div>`;
+  html+=authBanner();
+
+  if(withData.length<res.length){
+    const na=res.length-withData.length;
+    html+=`<div class="note">⏳ มี ${na} รายการที่ยังไม่มีคอลัมน์ข้อมูลในชีต (แสดงเป็นโครงไว้) — เมื่อเพิ่มข้อมูลในชีต Dashboard จะคำนวณให้อัตโนมัติ</div>`;
+  }
+
+  html+=`<div class="flex no-print" style="margin-bottom:12px">
+    <button class="btn primary" onclick="exportGroupNotScreened('${g.id}')">⬇ ส่งออกรายชื่อยังไม่คัดกรอง (ทั้งกลุ่ม)</button>
+    <span class="muted" style="font-size:12px">ได้ไฟล์ CSV worklist รายคน ว่าต้องคัดกรองอะไรบ้าง (ต้องเข้าสู่ระบบ)</span>
+  </div>`;
+  html+=`<div class="tblwrap"><div class="cap">📋 รายการคัดกรองและตัวชี้วัด (KPI)</div>
+  <div class="tblscroll"><table>
+  <thead><tr>
+    <th>รายการคัดกรอง</th><th>กลุ่มเป้าหมาย</th>
+    <th class="num">เป้าหมาย</th><th class="num">คัดกรองแล้ว</th>
+    <th style="width:150px">ร้อยละผลงาน</th>
+    <th class="num">ยังไม่คัดกรอง</th><th class="num">ผลผิดปกติ</th>
+    <th class="num">เป้าหมาย KPI</th><th class="num">ต้องทำเพิ่ม</th><th>สถานะ</th>
+  </tr></thead><tbody>`;
+  res.forEach((r,i)=>{
+    const sc=r.sc; const clk=r.available?`class="clickable" onclick="drill('${g.id}',${i})"`:'';
+    html+=`<tr ${clk}>
+      <td class="name-cell">${esc(sc.name)}</td>
+      <td class="tgt-cell">${esc(sc.target)}</td>
+      <td class="num">${r.available?fmt(r.target):'<span class="muted">—</span>'}</td>
+      <td class="num">${r.available?fmt(r.screened):'<span class="muted">—</span>'}</td>
+      <td>${pctCell(r)}</td>
+      <td class="num">${r.available?fmt(r.gap):'<span class="muted">—</span>'}</td>
+      <td class="num ${r.abn?'st-fail':''}">${r.available?(r.abn?'<b>'+fmt(r.abn)+'</b>':'0'):'<span class="muted">—</span>'}</td>
+      <td class="num">${sc.kpi?sc.kpi+'%':'<span class="muted">—</span>'}</td>
+      <td class="num">${r.available&&sc.kpi?(r.need>0?'<b class="st-fail">'+fmt(r.need)+'</b>':'<span class="st-pass">✔</span>'):'<span class="muted">—</span>'}</td>
+      <td>${statusBadge(r.status)}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div></div>
+  <div class="info">💡 คลิกที่แถวรายการคัดกรอง เพื่อดู <b>รายชื่อทุกคน</b> พร้อม <b>สถานะคัดกรอง · ผล/ค่าที่ตรวจ · วันที่ · แปลผล (ปกติ/ผิดปกติ)</b> — มีแท็บ ทั้งหมด / ยังไม่คัดกรอง / คัดกรองแล้ว / ผลผิดปกติ และ Export CSV ได้ทุกแท็บ</div>`;
+  $('#content').innerHTML=html;
+  window.__lastRes={gid:g.id,pop,res};
+}
+
+function renderDisease(d){
+  const ppl=activePeople();
+  const base=ppl.filter(d.base);
+  let html=`
+  <h2 class="sec-title"><span class="ico">${d.ico}</span> ${esc(d.name)}</h2>
+  <p class="sec-desc">${esc(d.desc)} · ${modeLabel()} · ${S.moo?('หมู่ '+S.moo):'ทุกหมู่'}</p>
+  <div class="cards">
+    ${card('จำนวนผู้ป่วย',base.length?fmt(base.length):'—','คนในทะเบียน (พื้นที่ที่เลือก)')}
+  </div>`;
+  html+=authBanner();
+  html+=`<div class="flex no-print" style="margin-bottom:12px">
+    <button class="btn primary" onclick="exportDzNotDone('${d.id}')">⬇ ส่งออกรายชื่อที่ยังไม่ได้ตรวจ (ทั้งกลุ่มโรค)</button>
+    <span class="muted" style="font-size:12px">worklist ผู้ป่วยที่ยังไม่ได้ตรวจตามรายการ (ต้องเข้าสู่ระบบ)</span>
+  </div>
+  <div class="tblwrap"><div class="cap">📋 ตัวชี้วัดการดูแลรักษา</div>
+  <div class="tblscroll"><table>
+  <thead><tr><th>รายการ</th><th class="num">ฐานผู้ป่วย</th><th class="num">ทำได้</th><th style="width:150px">ร้อยละ</th><th class="num">ส่วนที่ต้องพบ</th><th>สถานะ</th></tr></thead><tbody>`;
+  d.items.forEach((it,i)=>{
+    if(it.type==='reg'){
+      html+=`<tr><td class="name-cell">${esc(it.name)}</td><td class="num">${fmt(base.length)}</td><td class="num">${fmt(base.length)}</td><td>—</td><td class="num">—</td><td>${statusBadge(base.length?'pass':'pending')}</td></tr>`;
+    } else if(it.type==='mon'){
+      const elig=base; const done=elig.filter(it.fn); const abn=done.filter(it.abn).length;
+      const pct=elig.length?done.length/elig.length*100:0;
+      const st=elig.length?(pct>=it.kpi?'pass':pct>=it.kpi*0.8?'warn':'fail'):'pending';
+      html+=`<tr class="clickable" onclick="drillDz('${d.id}',${i})">
+        <td class="name-cell">${esc(it.name)}</td>
+        <td class="num">${fmt(elig.length)}</td>
+        <td class="num">${fmt(done.length)}${abn?` <span class="st-fail" title="ผลผิดปกติ">(⚠${fmt(abn)})</span>`:''}</td>
+        <td><div class="pct st-${st}">${pct.toFixed(1)}%</div><div class="bar"><span style="width:${Math.min(100,pct)}%;background:${barColor(st)}"></span></div></td>
+        <td class="num">${fmt(Math.max(0,elig.length-done.length))}</td>
+        <td>${statusBadge(st)}</td></tr>`;
+    } else if(it.type==='link'){
+      html+=`<tr><td class="name-cell">${esc(it.name)}</td><td colspan="4" class="muted">ดูรายละเอียดในกลุ่มวัย (วัยทำงาน/ผู้สูงอายุ)</td><td>${statusBadge('warn')}</td></tr>`;
+    } else {
+      html+=`<tr><td class="name-cell muted">${esc(it.name)}</td><td colspan="4" class="muted">⏳ ยังไม่มีคอลัมน์ข้อมูลในชีต</td><td>${statusBadge('pending')}</td></tr>`;
+    }
+  });
+  html+=`</tbody></table></div></div>`;
+  if(d.items.some(i=>i.type==='na'))
+    html+=`<div class="note">⏳ ตัวชี้วัดที่ขึ้น “รอข้อมูล” ต้องเพิ่มคอลัมน์ในชีต เช่น HbA1c, eGFR, UACR, ผลตรวจตา/เท้า, ค่า BP, CVD Risk แล้ว Dashboard จะคำนวณให้อัตโนมัติ</div>`;
+  $('#content').innerHTML=html;
+}
+
+function card(lab,val,foot,cls=''){ return `<div class="card"><div class="lab">${lab}</div><div class="val ${cls}">${val}</div><div class="foot">${foot||''}</div></div>`; }
+function authBanner(){
+  if(S.authed)return '';
+  return `<div class="note no-print" style="cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openLogin()">
+    🔒 <div><b>ยังไม่ได้เข้าสู่ระบบ</b> — คลิกที่นี่เพื่อเข้าสู่ระบบ (admin / 1234)
+    แล้วเมื่อคลิกแต่ละรายการคัดกรอง/KPI จะเห็น <b>รายชื่อคนไข้</b> พร้อมผลตรวจ</div></div>`;
+}
+function pctTxt(n,d){ return d?((n/d*100).toFixed(1)+'%'):'0%'; }
+function modeLabel(){ return S.mode==='all'?'ผลงานสะสมทั้งหมด (ทุกช่วงเวลา)':('ปีงบประมาณ '+S.fy+' (ต.ค.'+(S.fy-544)+'–ก.ย.'+(S.fy-543)+')'); }
+
+/* ==================================================================
+   DRILL-DOWN
+   ================================================================== */
+let drillState=null;
+let pendingDrill=null;
+function requireAuth(fn){
+  if(S.authed) return true;                 // ผ่าน — ให้ผู้เรียกทำงานส่วนที่เหลือเอง (ห้ามเรียก fn ซ้ำ = recursion)
+  pendingDrill=fn||null; openLogin();        // ยังไม่ล็อกอิน — เก็บงานไว้ทำหลังล็อกอิน
+  return false;
+}
+// อ่านผล/วันที่ตรวจของคน 1 คน ตามคอลัมน์ที่รายการนั้นใช้
+function infoOf(field,p){
+  if(!field) return {val:'-',date:null};
+  if(field==='lipid'){
+    const d=p.chol.date||p.tg.date;
+    return {val:`Chol ${p.chol.raw||'-'} / TG ${p.tg.raw||'-'}`, date:d};
+  }
+  const t=p[field]; return t?{val:(t.raw||'-'), date:t.date}:{val:'-',date:null};
+}
+// สร้างข้อมูลรายคน: สถานะคัดกรอง + ผล + วันที่ + ผิดปกติ
+function buildRecords(list, screenedFn, abnFn, field){
+  return list.map(p=>{
+    const scr=screenedFn(p); const info=infoOf(field,p);
+    return {p, scr, abn: scr&&abnFn(p), val:info.val, date:info.date};
+  });
+}
+function drill(gid,idx){
+  if(!requireAuth(()=>drill(gid,idx)))return;
+  const g=AGE_GROUPS.find(x=>x.id===gid); const pop=groupPop(g); const sc=g.screenings[idx];
+  const elig=pop.filter(sc.target_fn);
+  openDrillRich(sc.name, buildRecords(elig, sc.screened_fn, sc.abnormal_fn, sc.field), sc.followText);
+}
+function drillDz(did,idx){
+  if(!requireAuth(()=>drillDz(did,idx)))return;
+  const d=DZ_GROUPS.find(x=>x.id===did); const it=d.items[idx]; if(!it||it.type!=='mon')return;
+  const base=activePeople().filter(d.base);
+  openDrillRich(it.name, buildRecords(base, it.fn, it.abn, it.field), '');
+}
+function openDrillRich(title, records, followText){
+  const tabs=[
+    {key:'all',  label:'ทั้งหมด',       f:()=>true},
+    {key:'not',  label:'ยังไม่คัดกรอง', f:r=>!r.scr},
+    {key:'done', label:'คัดกรองแล้ว',   f:r=>r.scr},
+    {key:'abn',  label:'ผลผิดปกติ',     f:r=>r.abn},
+  ].map(t=>({...t, list:records.filter(t.f)}));
+  drillState={title, tabs, active:0, followText:followText||''};
+  $('#drillTitle').textContent=title;
+  $('#drillTabs').innerHTML=tabs.map((t,i)=>`<button class="${i===0?'on':''}" onclick="drillTab(${i})">${t.label} (${fmt(t.list.length)})</button>`).join('');
+  drillRenderList();
+  $('#drill').classList.add('on');
+}
+function drillTab(i){ drillState.active=i; $$('#drillTabs button').forEach((b,j)=>b.classList.toggle('on',j===i)); drillRenderList(); }
+function statusChip(r){
+  if(!r.scr) return '<span class="pill badge-pending">○ ยังไม่คัดกรอง</span>';
+  return r.abn ? '<span class="pill badge-fail">⚠ ผิดปกติ</span>' : '<span class="pill badge-pass">✔ ปกติ</span>';
+}
+function drillRenderList(){
+  const t=drillState.tabs[drillState.active]; const list=t.list;
+  let h='';
+  if(t.key==='abn' && drillState.followText) h+=`<div class="info" style="margin:10px 14px 0">🩺 การติดตามรักษา: ${esc(drillState.followText)}</div>`;
+  h+=`<div style="padding:6px 4px"><table><thead><tr>
+    <th>HN</th><th>ชื่อ-สกุล</th><th class="num">อายุ</th><th>เพศ</th><th>หมู่</th><th>สิทธิ</th>
+    <th>สถานะ</th><th>ผล/ค่าที่ตรวจ</th><th>วันที่ตรวจ</th></tr></thead><tbody>`;
+  if(!list.length) h+=`<tr><td colspan="9" class="empty">— ไม่มีรายชื่อ —</td></tr>`;
+  list.slice(0,1500).forEach(r=>{
+    const p=r.p; const dt=r.date?r.date.toLocaleDateString('th-TH'):'-';
+    h+=`<tr>
+      <td>${esc(p.hn)}</td><td class="name-cell">${esc(p.name)}</td>
+      <td class="num">${p.age??'-'}</td><td>${sexTh(p)}</td><td>${esc(p.moo)}</td>
+      <td class="tgt-cell">${esc(p.pttype)}</td>
+      <td>${statusChip(r)}</td>
+      <td class="${r.abn?'st-fail':''}">${r.scr?esc(r.val):'<span class="muted">ยังไม่มีผล</span>'}</td>
+      <td class="tgt-cell">${r.scr?dt:'-'}</td></tr>`;
+  });
+  h+=`</tbody></table>`;
+  if(list.length>1500)h+=`<div class="muted" style="padding:10px">แสดง 1,500 รายแรกจาก ${fmt(list.length)} — Export CSV เพื่อดูทั้งหมด</div>`;
+  h+=`</div>`;
+  $('#drillBody').innerHTML=h;
+  $('#drillCsv').onclick=()=>exportDrill(t);
+}
+function exportDrill(tab){
+  const head=['HN','ชื่อ-สกุล','อายุ','เพศ','หมู่','บ้านเลขที่','สิทธิ','สถานะคัดกรอง','ผล/ค่าที่ตรวจ','วันที่ตรวจ'];
+  const rows=[head];
+  tab.list.forEach(r=>{
+    const p=r.p; const dt=r.date?r.date.toLocaleDateString('th-TH'):'';
+    const st=!r.scr?'ยังไม่คัดกรอง':(r.abn?'ผิดปกติ':'ปกติ');
+    rows.push([p.hn,p.name,p.age??'',sexTh(p),p.moo,p.house,p.pttype,st, r.scr?r.val:'', r.scr?dt:'']);
+  });
+  downloadCSV(rows,`${drillState.title}_${tab.key}_${S.moo?('หมู่'+S.moo):'ทุกหมู่'}_ปีงบ${S.fy}`);
+}
+function downloadCSV(rows,name){
+  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=name.replace(/[\\\/:*?"<>|]/g,'_')+'.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function closeDrill(){ $('#drill').classList.remove('on'); }
+
+/* ---------- ส่งออกรายชื่อ "ยังไม่คัดกรอง" ทั้งกลุ่ม ---------- */
+const sexTh=p=>p.sex==='M'?'ชาย':(p.sex==='F'?'หญิง':'-');
+function exportGroupNotScreened(gid){
+  if(!requireAuth(()=>exportGroupNotScreened(gid)))return;
+  const g=AGE_GROUPS.find(x=>x.id===gid); const pop=groupPop(g); const scs=g.screenings;
+  const head=['HN','ชื่อ-สกุล','อายุ','เพศ','หมู่','บ้านเลขที่','สิทธิ',...scs.map(s=>s.name),'จำนวนที่ต้องคัดกรอง'];
+  const rows=[head];
+  pop.forEach(p=>{
+    let need=0;
+    const cells=scs.map(sc=>{
+      if(!sc.target_fn(p))return '';                 // ไม่ใช่กลุ่มเป้าหมาย
+      if(sc.screened_fn(p))return 'ตรวจแล้ว';
+      need++; return '❌ ต้องคัดกรอง';
+    });
+    if(need>0) rows.push([p.hn,p.name,p.age??'',sexTh(p),p.moo,p.house,p.pttype,...cells,need]);
+  });
+  if(rows.length===1){ alert('ไม่มีรายชื่อที่ต้องคัดกรองในกลุ่มนี้ (ตามเงื่อนไขที่เลือก)'); return; }
+  downloadCSV(rows,`ยังไม่คัดกรอง_${g.name.split(' (')[0]}_${S.moo?('หมู่'+S.moo):'ทุกหมู่'}_ปีงบ${S.fy}`);
+}
+function exportDzNotDone(did){
+  if(!requireAuth(()=>exportDzNotDone(did)))return;
+  const d=DZ_GROUPS.find(x=>x.id===did); const base=activePeople().filter(d.base);
+  const tasks=d.items.filter(i=>i.type==='mon'&&i.isTask!==false);
+  const head=['HN','ชื่อ-สกุล','อายุ','หมู่','บ้านเลขที่','สิทธิ',...tasks.map(m=>m.name),'จำนวนที่ต้องทำ'];
+  const rows=[head];
+  base.forEach(p=>{
+    let need=0;
+    const cells=tasks.map(m=>{ if(m.fn(p))return 'ทำแล้ว'; need++; return '❌ ยังไม่ทำ'; });
+    if(need>0) rows.push([p.hn,p.name,p.age??'',p.moo,p.house,p.pttype,...cells,need]);
+  });
+  if(rows.length===1){ alert('ไม่มีรายชื่อที่ต้องตามในกลุ่มโรคนี้ (ตามเงื่อนไขที่เลือก)'); return; }
+  downloadCSV(rows,`ติดตาม_${d.name.split(' (')[0]}_${S.moo?('หมู่'+S.moo):'ทุกหมู่'}_ปีงบ${S.fy}`);
+}
+
+/* ==================================================================
+   NAV
+   ================================================================== */
+function syncNav(){
+  const ppl=activePeople();
+  $('#nav-age').innerHTML=AGE_GROUPS.map(g=>{
+    const n=ppl.filter(g.pop).length;
+    return `<button class="navbtn ${S.view===g.id?'active':''}" data-view="${g.id}"><span class="ico">${g.ico}</span> ${g.name.split(' (')[0]} <span class="cnt">${fmt(n)}</span></button>`;
+  }).join('');
+  $('#nav-dz').innerHTML=DZ_GROUPS.map(d=>{
+    const n=ppl.filter(d.base).length;
+    return `<button class="navbtn ${S.view===d.id?'active':''}" data-view="${d.id}"><span class="ico">${d.ico}</span> ${d.name.split(' (')[0]} ${n?`<span class="cnt">${fmt(n)}</span>`:''}</button>`;
+  }).join('');
+  $$('.navbtn[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
+  $$('.navbtn[data-view="overview"]').forEach(b=>b.classList.toggle('active',S.view==='overview'));
+}
+function go(v){ S.view=v; $('#side').classList.remove('open'); render(); window.scrollTo(0,0); }
+
+/* ==================================================================
+   DATA LOADING
+   ================================================================== */
+function setStatus(txt,cls){ const el=$('#status'); el.textContent='● '+txt; el.className='pill '+cls+' no-print'; }
+
+async function loadFromGAS(){
+  setStatus('กำลังโหลด...','badge-warn');
+  renderEmpty();
+  let url=GAS_URL;
+  if(S.authed){ url+=(url.includes('?')?'&':'?')+'user='+encodeURIComponent(AUTH.user)+'&pass='+encodeURIComponent(AUTH.pass); }
+  try{
+    const res=await fetch(url,{redirect:'follow'});
+    const j=await res.json();
+    if(j && j.ok===false)throw new Error(j.error||'GAS error');
+    const rows=Array.isArray(j)?j:(j.data||[]);
+    if(!rows.length)throw new Error('ไม่พบข้อมูลในชีต');
+    ingest(rows, j.updated||'');
+    setStatus(`ข้อมูล ${fmt(S.people.length)} คน${S.authed?' · 🔓 เห็นรายชื่อ':''}`,'badge-pass');
+  }catch(err){
+    setStatus('โหลดข้อมูลไม่สำเร็จ','badge-fail');
+    $('#content').innerHTML=`<div class="tblwrap"><div class="empty"><div class="big">⚠️</div>
+      <h3>โหลดข้อมูลไม่สำเร็จ</h3><p class="muted">${esc(err.message)}</p>
+      <p class="muted" style="font-size:12px">ตรวจสอบว่า Deploy เป็น Web app + Who has access = Anyone และ URL ใน CONFIG ถูกต้อง (ลงท้าย /exec)</p>
+      <button class="btn primary" onclick="loadFromGAS()">ลองใหม่</button></div></div>`;
+  }
+}
+function ingest(rows,updated){
+  S.raw=rows; S.people=normalize(rows);
+  S.updated=updated || new Date().toLocaleString('th-TH');
+  buildMooOptions();
+  render();
+}
+function buildMooOptions(){
+  const moos=[...new Set(S.people.map(p=>p.moo).filter(m=>m!==''&&m!=null))]
+    .sort((a,b)=>(+a||999)-(+b||999));
+  $('#mooSel').innerHTML='<option value="">ทุกหมู่</option>'+moos.map(m=>`<option value="${esc(m)}">หมู่ ${esc(m)}</option>`).join('');
+  $('#mooSel').value=S.moo;
+}
+
+/* ==================================================================
+   LOGIN
+   ================================================================== */
+function openLogin(){ $('#loginErr').textContent=''; $('#inUser').value=$('#inUser').value||''; $('#login').classList.add('on'); setTimeout(()=>$('#inUser').focus(),50); }
+function closeLogin(){ $('#login').classList.remove('on'); $('#loginErr').textContent=''; }
+async function doLogin(){
+  const u=$('#inUser').value.trim(), p=$('#inPass').value;
+  if(u===AUTH.user && p===AUTH.pass){
+    S.authed=true; try{localStorage.setItem('ppdash_auth','1');}catch(e){}
+    closeLogin();
+    updateLoginBtn();
+    await loadFromGAS();          // ดึงข้อมูลใหม่พร้อมรายชื่อ
+    if(pendingDrill){ const f=pendingDrill; pendingDrill=null; f(); }
+  }else{
+    $('#loginErr').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+  }
+}
+function logout(){ S.authed=false; try{localStorage.removeItem('ppdash_auth');}catch(e){} updateLoginBtn(); closeDrill(); loadFromGAS(); }
+function updateLoginBtn(){
+  const t=S.authed?'🔓 ออกจากระบบ':'🔒 เข้าสู่ระบบ';
+  $('#btn-login').textContent=t;
+  $('#btn-login2').innerHTML=`<span class="ico">${S.authed?'🔓':'🔑'}</span> ${S.authed?'ออกจากระบบ':'เข้าสู่ระบบ (ดูรายชื่อ)'}`;
+}
+
+/* ==================================================================
+   IMPORT — นำเข้า data.xlsx เพื่ออัปเดต Google Sheet
+   ================================================================== */
+function fmtDate(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function importXlsx(file){
+  if(typeof XLSX==='undefined'){ alert('โหลดตัวอ่าน Excel ไม่สำเร็จ — ต้องต่ออินเทอร์เน็ต แล้วลองใหม่'); return; }
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      let values=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,blankrows:false});
+      values=values.map(row=>row.map(c=>{
+        if(c instanceof Date && !isNaN(c)) return fmtDate(c);
+        return c==null?'':c;
+      }));
+      // ตัดแถวว่างท้ายไฟล์ (ไม่มีค่าเลย)
+      values=values.filter(r=>r.some(c=>String(c).trim()!==''));
+      if(values.length<2){ alert('ไฟล์ไม่มีข้อมูล'); return; }
+      if(!confirm(`นำเข้า ${fmt(values.length-1)} แถว เพื่อเขียนทับข้อมูลเดิมใน Google Sheet ทั้งหมด?\n\n⚠️ ข้อมูลเดิมในชีตจะถูกแทนที่`))return;
+      setStatus('กำลังอัปโหลดข้อมูล...','badge-warn');
+      const res=await fetch(GAS_URL,{method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'import',user:AUTH.user,pass:AUTH.pass,values})});
+      const j=await res.json();
+      if(!j || j.ok!==true)throw new Error((j&&j.error)||'อัปโหลดไม่สำเร็จ');
+      alert(`✅ อัปเดต Google Sheet สำเร็จ ${fmt(j.count)} แถว`);
+      await loadFromGAS();
+    }catch(err){
+      setStatus('อัปเดตไม่สำเร็จ','badge-fail');
+      alert('นำเข้าไม่สำเร็จ: '+err.message+'\n\nตรวจสอบว่า Deploy Code.gs เวอร์ชันใหม่ (มี doPost) และ Who has access = Anyone แล้ว');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ==================================================================
+   INIT
+   ================================================================== */
+function init(){
+  $('#fySel').innerHTML=FY_LIST.map(y=>`<option value="${y}">${y} (ต.ค.${y-544}–ก.ย.${y-543})</option>`).join('');
+  $('#fySel').value=S.fy;
+  $('#fySel').onchange=e=>{ S.fy=+e.target.value; render(); };
+  $('#mooSel').onchange=e=>{ S.moo=e.target.value; render(); };
+  $$('#modeSeg button').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.mode; $$('#modeSeg button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+
+  const loginToggle=()=> S.authed?logout():openLogin();
+  $('#btn-login').onclick=loginToggle;
+  $('#btn-login2').onclick=loginToggle;
+  $('#doLogin').onclick=doLogin;
+  $('#inPass').addEventListener('keydown',e=>{ if(e.key==='Enter')doLogin(); });
+  $('#btn-refresh').onclick=()=>loadFromGAS();
+
+  $('#btn-import').onclick=()=>$('#fileImport').click();
+  $('#fileImport').onchange=e=>{ if(e.target.files[0])importXlsx(e.target.files[0]); e.target.value=''; };
+
+  S.authed=true;                 // เห็นรายชื่อได้เลย ไม่ต้องล็อกอิน
+  $('#btn-login').classList.add('hide');
+  $('#btn-login2').classList.add('hide');
+  updateLoginBtn();
+  syncNav();
+  loadFromGAS();                 // เปิดมาโหลด Dashboard พร้อมรายชื่อทันที
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
